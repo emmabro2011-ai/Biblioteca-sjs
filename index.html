@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca — San José de la Sierra</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --primary: #0f4c81;
+      --primary-dark: #093256;
+      --text: #1b2430;
+      --muted: #5c6b7c;
+      --border: #d9e2ec;
+      --ok-bg: #e6f4ea;
+      --ok-text: #137333;
+      --warn-bg: #fce8e6;
+      --warn-text: #c5221f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 1.25rem 1rem;
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand h1 { font-size: 1.35rem; font-weight: 700; }
+    .brand p { font-size: 0.9rem; opacity: 0.9; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 0.95rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-light { background: #fff; color: var(--primary); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 220px;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: var(--surface);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    .badge-ok { background: var(--ok-bg); color: var(--ok-text); }
+    .badge-out { background: var(--warn-bg); color: var(--warn-text); }
+
+    .meta { font-size: 0.88rem; color: var(--muted); }
+
+    .panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel.active { display: block; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>Biblioteca Escolar — San José de la Sierra</h1>
+        <p>Consulta de disponibilidad y gestión bibliotecaria</p>
+      </div>
+      <button class="btn btn-light" id="toggleAdminBtn" type="button">
+        Acceso Bibliotecaria
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Panel privado (se mostrará tras conectar autenticación real) -->
+    <section class="panel" id="adminPanel">
+      <h2>Panel de Administración</h2>
+      <p class="meta">
+        Aquí podrás agregar libros, generar resúmenes con IA y controlar préstamos pendientes.
+      </p>
+
+      <form id="bookForm" class="form-grid">
+        <input type="text" id="bookTitle" placeholder="Título del libro" required />
+        <input type="text" id="bookAuthor" placeholder="Autor" required />
+        <input type="number" id="bookStock" placeholder="Ejemplares disponibles" min="0" value="1" required />
+        <select id="bookArea">
+          <option value="Ciencias y Matemática">Ciencias y Matemática</option>
+          <option value="Literatura">Literatura</option>
+          <option value="Historia y Geografía">Historia y Geografía</option>
+          <option value="General">General</option>
+        </select>
+        <textarea id="bookSummary" placeholder="Resumen del libro (o generarlo con IA)" style="grid-column: 1 / -1;"></textarea>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; grid-column: 1 / -1;">
+          <button class="btn btn-primary" type="submit">Guardar libro</button>
+          <button class="btn btn-outline" type="button" id="aiSummaryBtn">Resumir con IA (próximamente)</button>
+        </div>
+      </form>
+
+      <h3 style="margin-top: 1.5rem;">Préstamos y entregas pendientes</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Grado / Sección</th>
+              <th>Libro</th>
+              <th>Fecha límite</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="loansTableBody">
+            <tr>
+              <td>Ejemplo: Estudiante de prueba</td>
+              <td>4.º Año</td>
+              <td>Física General</td>
+              <td>28/11/2026</td>
+              <td><span class="badge badge-out">Pendiente</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Catálogo público -->
+    <section>
+      <div class="toolbar">
+        <input
+          type="search"
+          class="search-input"
+          id="searchInput"
+          placeholder="Buscar por título, autor o área..."
+        />
+      </div>
+      <div class="grid" id="catalogGrid"></div>
+    </section>
+  </main>
+
+  <script>
+    const sampleBooks = [
+      {
+        title: "Mecánica y Ondas",
+        author: "Varios autores",
+        area: "Ciencias y Matemática",
+        stock: 3,
+        summary: "Introducción clara a cinemática, leyes de Newton, energía y movimiento ondulatorio."
+      },
+      {
+        title: "Cuentos y Relatos Clásicos",
+        author: "Antología escolar",
+        area: "Literatura",
+        stock: 0,
+        summary: "Selección de narraciones breves para lectura recreativa y análisis literario."
+      }
+    ];
+
+    const catalogGrid = document.getElementById("catalogGrid");
+    const searchInput = document.getElementById("searchInput");
+    const toggleAdminBtn = document.getElementById("toggleAdminBtn");
+    const adminPanel = document.getElementById("adminPanel");
+    const bookForm = document.getElementById("bookForm");
+    const aiSummaryBtn = document.getElementById("aiSummaryBtn");
+
+    function renderBooks(filter = "") {
+      const q = filter.trim().toLowerCase();
+      const filtered = sampleBooks.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q) ||
+          b.area.toLowerCase().includes(q)
+      );
+
+      catalogGrid.innerHTML = filtered
+        .map((book) => {
+          const available = book.stock > 0;
+          return `
+            <article class="card">
+              <div>
+                <span class="badge ${available ? "badge-ok" : "badge-out"}">
+                  ${available ? `Disponible (${book.stock})` : "Sin ejemplares"}
+                </span>
+                <h3 style="margin-top: 0.5rem;">${book.title}</h3>
+                <p class="meta">${book.author} · ${book.area}</p>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem;">${book.summary}</p>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    searchInput.addEventListener("input", (e) => renderBooks(e.target.value));
+
+    toggleAdminBtn.addEventListener("click", () => {
+      adminPanel.classList.toggle("active");
+    });
+
+    bookForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      sampleBooks.unshift({
+        title: document.getElementById("bookTitle").value.trim(),
+        author: document.getElementById("bookAuthor").value.trim(),
+        area: document.getElementById("bookArea").value,
+        stock: Number(document.getElementById("bookStock").value),
+        summary: document.getElementById("bookSummary").value.trim() || "Sin resumen registrado aún."
+      });
+      bookForm.reset();
+      renderBooks(searchInput.value);
+    });
+
+    aiSummaryBtn.addEventListener("click", () => {
+      const title = document.getElementById("bookTitle").value.trim() || "este libro";
+      document.getElementById("bookSummary").value =
+        `Resumen borrador para "${title}": obra de consulta escolar organizada por temas fundamentales y ejemplos prácticos.`;
+    });
+
+    renderBooks();
+  </script>
+</body>
+  </html>
+  
