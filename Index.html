@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca SJS — Biblioteca San José de la Sierra</title>
+  <meta name="description" content="Catálogo oficial de la Biblioteca SJS — Biblioteca Escolar San José de la Sierra. Consulta de libros registrados, disponibilidad y búsqueda por área." />
+  <meta name="keywords" content="Biblioteca SJS, Biblioteca San José de la Sierra, libros SJS, catálogo biblioteca escolar, Morelabs" />
+  <meta name="author" content="Morelabs" />
+  <meta property="og:title" content="Biblioteca SJS — Biblioteca San José de la Sierra" />
+  <meta property="og:description" content="Consulta de disponibilidad y catálogo oficial de la Biblioteca San José de la Sierra." />
+  <meta property="og:type" content="website" />
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --primary: #0f4c81;
+      --primary-dark: #093256;
+      --text: #1b2430;
+      --muted: #5c6b7c;
+      --border: #d9e2ec;
+      --ok-bg: #e6f4ea;
+      --ok-text: #137333;
+      --warn-bg: #fce8e6;
+      --warn-text: #c5221f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 1.25rem 1rem;
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand h1 { font-size: 1.35rem; font-weight: 700; }
+    .brand p { font-size: 0.9rem; opacity: 0.9; }
+
+    .admin-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.14);
+      padding: 0.4rem 0.65rem;
+      border-radius: 10px;
+    }
+
+    .admin-bar label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .admin-bar input {
+      width: 120px;
+      padding: 0.4rem 0.6rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-light { background: #fff; color: var(--primary); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: var(--warn-bg); color: var(--warn-text); padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+    .btn-toggle { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+
+    main {
+      max-width: 960px;
+      width: 100%;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      flex: 1;
+    }
+
+    .panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel.active { display: block; }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    textarea { min-height: 75px; resize: vertical; grid-column: 1 / -1; }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      grid-column: 1 / -1;
+      padding: 0.25rem 0;
+    }
+
+    .check-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 640px) {
+      .toolbar { grid-template-columns: 1fr; }
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .book-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .book-info { flex: 1; min-width: 220px; }
+
+    .book-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.35rem;
+    }
+
+    .book-code {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: #e8f0fe;
+      padding: 0.18rem 0.55rem;
+      border-radius: 6px;
+    }
+
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.18rem 0.6rem;
+      border-radius: 999px;
+    }
+
+    .badge-ok { background: var(--ok-bg); color: var(--ok-text); }
+    .badge-out { background: var(--warn-bg); color: var(--warn-text); }
+
+    .meta { font-size: 0.86rem; color: var(--muted); }
+    .desc { font-size: 0.92rem; margin-top: 0.4rem; }
+
+    .admin-actions {
+      display: none;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .admin-unlocked .admin-actions { display: flex; }
+
+    .empty-state {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 2rem 1rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.25rem 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>Biblioteca SJS — San José de la Sierra</h1>
+        <p>Consulta de libros y disponibilidad</p>
+      </div>
+
+      <form class="admin-bar" id="adminUnlockForm">
+        <label for="adminPin">Administrador</label>
+        <input
+          type="password"
+          id="adminPin"
+          maxlength="8"
+          placeholder="PIN (8 car.)"
+          autocomplete="off"
+          required
+        />
+        <button class="btn btn-light" type="submit" id="unlockBtn">Entrar</button>
+      </form>
+    </div>
+  </header>
+
+  <main id="appContainer">
+    <!-- Panel exclusivo al desbloquear con el PIN -->
+    <section class="panel" id="adminPanel">
+      <div class="panel-header">
+        <h2>Añadir libro al catálogo</h2>
+        <button class="btn btn-toggle" type="button" id="lockAdminBtn">Cerrar panel</button>
+      </div>
+
+      <form id="bookForm" class="form-grid">
+        <input type="text" id="bookTitle" placeholder="Título del libro" required />
+        <input type="text" id="bookArea" placeholder="Área (ej. Matemática, Física, Historia...)" required />
+        <input type="text" id="bookNumber" placeholder="Número de libro / Cota" required />
+        <textarea id="bookDesc" placeholder="Breve descripción del libro" required></textarea>
+
+        <label class="check-row">
+          <input type="checkbox" id="bookAvailable" checked />
+          Disponible para préstamo
+        </label>
+
+        <div style="grid-column: 1 / -1;">
+          <button class="btn btn-primary" type="submit">Guardar libro</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Buscador y filtros para el usuario normal -->
+    <section>
+      <div class="toolbar">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Buscar por título, número o descripción..."
+        />
+        <select id="areaFilter">
+          <option value="">Todas las áreas</option>
+        </select>
+        <select id="statusFilter">
+          <option value="">Todos los estados</option>
+          <option value="available">Solo disponibles</option>
+          <option value="unavailable">No disponibles</option>
+        </select>
+      </div>
+
+      <!-- Listado inferior en el inicio -->
+      <div class="list" id="booksList"></div>
+    </section>
+  </main>
+
+  <footer>
+    Biblioteca San José de la Sierra · Desarrollado por Morelabs
+  </footer>
+
+  <script>
+    // Huella SHA-256 del PIN de 8 caracteres: Sjs#26!M
+    const ADMIN_PIN_HASH = "e11314b4677790e2632d76f89f1b902263f76a325c618a74823850425f70142a";
+    const STORAGE_KEY = "biblioteca_sjs_books_v1";
+
+    let books = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    let isAdmin = false;
+
+    const appContainer = document.getElementById("appContainer");
+    const adminUnlockForm = document.getElementById("adminUnlockForm");
+    const adminPinInput = document.getElementById("adminPin");
+    const adminPanel = document.getElementById("adminPanel");
+    const lockAdminBtn = document.getElementById("lockAdminBtn");
+    const bookForm = document.getElementById("bookForm");
+    const searchInput = document.getElementById("searchInput");
+    const areaFilter = document.getElementById("areaFilter");
+    const statusFilter = document.getElementById("statusFilter");
+    const booksList = document.getElementById("booksList");
+
+    async function sha256(text) {
+      const data = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function saveBooks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
+    }
+
+    function updateAreaOptions() {
+      const current = areaFilter.value;
+      const areas = [...new Set(books.map((b) => b.area.trim()).filter(Boolean))].sort();
+      areaFilter.innerHTML =
+        `<option value="">Todas las áreas</option>` +
+        areas.map((a) => `<option value="${a}">${a}</option>`).join("");
+      if (areas.includes(current)) {
+        areaFilter.value = current;
+      }
+    }
+
+    function renderBooks() {
+      const q = searchInput.value.trim().toLowerCase();
+      const area = areaFilter.value;
+      const status = statusFilter.value;
+
+      const filtered = books.filter((b) => {
+        const matchesQuery =
+          !q ||
+          b.title.toLowerCase().includes(q) ||
+          b.number.toLowerCase().includes(q) ||
+          b.area.toLowerCase().includes(q) ||
+          b.desc.toLowerCase().includes(q);
+
+        const matchesArea = !area || b.area === area;
+        const matchesStatus =
+          !status ||
+          (status === "available" && b.available) ||
+          (status === "unavailable" && !b.available);
+
+        return matchesQuery && matchesArea && matchesStatus;
+      });
+
+      if (books.length === 0) {
+        booksList.innerHTML = `<div class="empty-state">Aún no hay libros registrados en el catálogo.</div>`;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        booksList.innerHTML = `<div class="empty-state">No se encontraron libros con los filtros actuales.</div>`;
+        return;
+      }
+
+      booksList.innerHTML = filtered
+        .map(
+          (book) => `
+          <article class="book-item">
+            <div class="book-info">
+              <div class="book-top">
+                <span class="book-code">N.º ${escapeHtml(book.number)}</span>
+                <span class="badge ${book.available ? "badge-ok" : "badge-out"}">
+                  ${book.available ? "Disponible" : "No disponible"}
+                </span>
+                <span class="meta">${escapeHtml(book.area)}</span>
+              </div>
+              <h3>${escapeHtml(book.title)}</h3>
+              <p class="desc">${escapeHtml(book.desc)}</p>
+            </div>
+            <div class="admin-actions">
+              <button class="btn btn-toggle" type="button" onclick="toggleAvailability('${book.id}')">
+                Cambiar estado
+              </button>
+              <button class="btn btn-danger" type="button" onclick="deleteBook('${book.id}')">
+                Eliminar
+              </button>
+            </div>
+          </article>
+        `
+        )
+        .join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    adminUnlockForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const enteredHash = await sha256(adminPinInput.value);
+      if (enteredHash === ADMIN_PIN_HASH) {
+        isAdmin = true;
+        adminPanel.classList.add("active");
+        appContainer.classList.add("admin-unlocked");
+        adminPinInput.value = "";
+      } else {
+        alert("PIN de administrador incorrecto.");
+        adminPinInput.value = "";
+      }
+    });
+
+    lockAdminBtn.addEventListener("click", () => {
+      isAdmin = false;
+      adminPanel.classList.remove("active");
+      appContainer.classList.remove("admin-unlocked");
+    });
+
+    bookForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!isAdmin) return;
+
+      const newBook = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        title: document.getElementById("bookTitle").value.trim(),
+        area: document.getElementById("bookArea").value.trim(),
+        number: document.getElementById("bookNumber").value.trim(),
+        desc: document.getElementById("bookDesc").value.trim(),
+        available: document.getElementById("bookAvailable").checked
+      };
+
+      books.unshift(newBook);
+      saveBooks();
+      updateAreaOptions();
+      renderBooks();
+      bookForm.reset();
+      document.getElementById("bookAvailable").checked = true;
+    });
+
+    window.toggleAvailability = function (id) {
+      if (!isAdmin) return;
+      const item = books.find((b) => b.id === id);
+      if (item) {
+        item.available = !item.available;
+        saveBooks();
+        renderBooks();
+      }
+    };
+
+    window.deleteBook = function (id) {
+      if (!isAdmin) return;
+      books = books.filter((b) => b.id !== id);
+      saveBooks();
+      updateAreaOptions();
+      renderBooks();
+    };
+
+    searchInput.addEventListener("input", renderBooks);
+    areaFilter.addEventListener("change", renderBooks);
+    statusFilter.addEventListener("change", renderBooks);
+
+    updateAreaOptions();
+    renderBooks();
+  </script>
+</body>
+</html>
